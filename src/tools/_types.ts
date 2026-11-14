@@ -51,6 +51,8 @@ export interface ToolDefinition<TData = unknown> {
   validate?: (data: TData) => MethodWarning[];
   connections: {
     feeds: ToolFeed<TData>[];
+    /** Genera tareas del proyecto a partir de esta instancia (ej. acciones de un A3). */
+    feedsTasks?: (data: TData) => { title: string }[];
   };
   ai: {
     guideQuestions: string[];

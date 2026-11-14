@@ -11,6 +11,7 @@ import { TaskStatusSelect } from "@/components/projects/task-status-select";
 import { AddTaskForm } from "@/components/projects/add-task-form";
 import { AddProjectMemberForm } from "@/components/projects/add-project-member-form";
 import { ChatPanel } from "@/components/ai/chat-panel";
+import { createLessonLearnedAction } from "../actions";
 
 const dateFormatter = new Intl.DateTimeFormat("es-CL", { dateStyle: "medium" });
 
@@ -57,7 +58,17 @@ export default async function ProjectDetailPage({
             )}
           </div>
         </div>
-        <ProjectStatusSelect projectId={project.id} status={project.status} disabled={!canEdit} />
+        <div className="flex items-center gap-2">
+          <ProjectStatusSelect projectId={project.id} status={project.status} disabled={!canEdit} />
+          {canEdit && (
+            <form action={createLessonLearnedAction}>
+              <input type="hidden" name="projectId" value={project.id} />
+              <Button type="submit" variant="outline" size="sm">
+                + Lección aprendida
+              </Button>
+            </form>
+          )}
+        </div>
       </div>
 
       {project.problemStatement && (

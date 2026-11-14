@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { getToolDefinition } from "@/tools/registry";
-import { saveToolInstanceAction, updateToolInstanceStatusAction, feedToolInstanceAction } from "@/app/(app)/proyectos/[projectId]/herramientas/actions";
+import {
+  saveToolInstanceAction,
+  updateToolInstanceStatusAction,
+  feedToolInstanceAction,
+  feedToolInstanceTasksAction,
+} from "@/app/(app)/proyectos/[projectId]/herramientas/actions";
 import { Button } from "@/components/ui/button";
 import type { MethodWarning } from "@/tools/_types";
 
@@ -83,6 +88,15 @@ export function ToolInstanceWorkspace({
               </Button>
             </form>
           ))}
+          {definition.connections.feedsTasks && (
+            <form action={feedToolInstanceTasksAction}>
+              <input type="hidden" name="projectId" value={projectId} />
+              <input type="hidden" name="sourceInstanceId" value={instanceId} />
+              <Button type="submit" variant="outline" size="sm">
+                Enviar acciones a tareas
+              </Button>
+            </form>
+          )}
           {canEdit && (
             <Button type="button" size="sm" onClick={handleSave} disabled={!dirty || isPending}>
               {isPending ? "Guardando…" : dirty ? "Guardar cambios" : "Guardado"}

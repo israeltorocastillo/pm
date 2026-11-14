@@ -124,3 +124,25 @@ export async function feedToolInstance(input: {
     sourceInstanceId: source.id,
   });
 }
+
+/** Crea tareas del proyecto a partir de `connections.feedsTasks` (ej. acciones de un A3). */
+export async function feedToolInstanceTasks(input: { userId: string; sourceInstanceId: string }) {
+  const source = await db.toolInstance.findUniqueOrThrow({ where: { id: input.sourceInstanceId } });
+  await requireProjectAccess(input.userId, source.projectId, "EDITOR");
+
+  const sourceDefinition = definitionOrThrow(source.toolId);
+  if (!sourceDefinition.connections.feedsTasks) {
+    throw new UnknownToolError(`${source.toolId} no genera tareas`);
+  }
+
+  const sourceData = sourceDefinition.schema.parse(source.data);
+  const tasks = sourceDefinition.connections.feedsTasks(sourceData);
+
+  return db.$transaction(
+    tasks.map((task) =>
+      db.task.create({
+        data: { projectId: source.projectId, title: task.title, sourceInstanceId: source.id },
+      }),
+    ),
+  );
+}

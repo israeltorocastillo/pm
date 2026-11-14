@@ -12,7 +12,9 @@ import {
   updateTaskStatus,
   addProjectMember,
 } from "@/server/services/projects";
+import { createToolInstance } from "@/server/services/tool-instances";
 import { AccessDeniedError } from "@/server/authz";
+import { db } from "@/server/db";
 
 export type ActionState = { error: string | null };
 
@@ -142,4 +144,30 @@ export async function addProjectMemberAction(
 
   revalidatePath(`/proyectos/${parsed.data.projectId}`);
   return { error: null };
+}
+
+/** "Cierre → lección aprendida": crea un borrador de lección aprendida prellenado con el problema del proyecto. */
+export async function createLessonLearnedAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user.id) redirect("/login");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  if (!projectId) redirect("/proyectos");
+
+  const project = await db.project.findUniqueOrThrow({ where: { id: projectId } });
+
+  const instance = await createToolInstance({
+    userId: session.user.id,
+    projectId,
+    toolId: "leccion-aprendida",
+    title: `Lección aprendida — ${project.name}`,
+    initialData: {
+      titulo: `Lección aprendida — ${project.name}`,
+      contexto: project.description ?? "",
+      problema: project.problemStatement ?? "",
+      faseOrigen: "cierre_de_proyecto",
+    },
+  });
+
+  redirect(`/proyectos/${projectId}/herramientas/${instance.id}`);
 }

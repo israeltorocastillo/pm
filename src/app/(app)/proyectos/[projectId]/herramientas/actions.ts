@@ -9,6 +9,7 @@ import {
   saveToolInstanceData,
   updateToolInstanceStatus,
   feedToolInstance,
+  feedToolInstanceTasks,
 } from "@/server/services/tool-instances";
 
 const createSchema = z.object({
@@ -72,4 +73,20 @@ export async function feedToolInstanceAction(formData: FormData) {
   });
 
   redirect(`/proyectos/${parsed.projectId}/herramientas/${instance.id}`);
+}
+
+const feedTasksSchema = z.object({
+  projectId: z.string().min(1),
+  sourceInstanceId: z.string().min(1),
+});
+
+export async function feedToolInstanceTasksAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user.id) redirect("/login");
+
+  const parsed = feedTasksSchema.parse(Object.fromEntries(formData));
+  await feedToolInstanceTasks({ userId: session.user.id, sourceInstanceId: parsed.sourceInstanceId });
+
+  revalidatePath(`/proyectos/${parsed.projectId}`);
+  redirect(`/proyectos/${parsed.projectId}`);
 }
