@@ -3,6 +3,7 @@ import { auth } from "@/server/auth";
 import { getToolInstanceDetail } from "@/server/services/tool-instances";
 import { ToolInstanceWorkspace } from "@/components/tools/tool-instance-workspace";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChatPanel } from "@/components/ai/chat-panel";
 
 export default async function ToolInstancePage({
   params,
@@ -60,6 +61,9 @@ export default async function ToolInstancePage({
           </Card>
         )}
       </aside>
+      <div className="fixed bottom-4 right-4 z-10">
+        <ChatPanel projectId={projectId} instanceId={instance.id} />
+      </div>
     </div>
   );
 }

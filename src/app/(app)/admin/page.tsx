@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/server/auth";
 import { getCurrentOrg } from "@/server/current-org";
 import { listOrgMembers } from "@/server/services/organizations";
+import { getOrgUsageSummary } from "@/server/services/ai-usage";
 import { InviteMemberForm } from "@/components/admin/invite-member-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -12,6 +13,7 @@ export default async function AdminPage() {
   if (!currentOrg || currentOrg.role !== "ADMIN") redirect("/dashboard");
 
   const members = await listOrgMembers(currentOrg.orgId);
+  const usage = await getOrgUsageSummary(currentOrg.orgId);
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
@@ -53,6 +55,16 @@ export default async function AdminPage() {
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Uso de IA este mes</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          {usage.requests} solicitudes · {usage.inputTokens.toLocaleString("es-CL")} tokens de entrada ·{" "}
+          {usage.outputTokens.toLocaleString("es-CL")} tokens de salida
         </CardContent>
       </Card>
     </div>

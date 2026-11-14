@@ -34,3 +34,33 @@ export async function getKnowledgeArticle(slug: string): Promise<{ title: string
     return null;
   }
 }
+
+export type KnowledgeSearchResult = { slug: string; title: string; snippet: string };
+
+/** Búsqueda simple por palabras clave: devuelve el párrafo donde aparece cada término. */
+export async function searchKnowledge(query: string, limit = 5): Promise<KnowledgeSearchResult[]> {
+  const terms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
+  if (terms.length === 0) return [];
+
+  const articles = await listKnowledgeArticles();
+  const results: KnowledgeSearchResult[] = [];
+
+  for (const article of articles) {
+    const content = await readFile(path.join(KNOWLEDGE_DIR, `${article.slug}.md`), "utf-8");
+    const lines = content.split("\n");
+    const matchLine = lines.find((line) => {
+      const lower = line.toLowerCase();
+      return terms.some((term) => lower.includes(term));
+    });
+
+    if (matchLine) {
+      results.push({ slug: article.slug, title: article.title, snippet: matchLine.trim().slice(0, 400) });
+    }
+    if (results.length >= limit) break;
+  }
+
+  return results;
+}

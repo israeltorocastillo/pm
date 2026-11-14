@@ -57,7 +57,7 @@ Nunca decide por el usuario ni modifica datos sin aprobación.
 
 ## 4. Tools que el asistente puede usar
 
-Definir con schemas Zod → JSON Schema, `strict: true`. **Lectura** se ejecuta directo; **escritura** crea un `AiProposal` y la UI pide confirmación.
+Definir con schemas Zod → JSON Schema (function calling plano de OpenAI, sin modo estricto por los campos opcionales). **Lectura** se ejecuta directo; **escritura** crea un `AiProposal` y la UI pide confirmación. `search_lessons_learned` es P3 y aún no está implementada.
 
 | Tool | Tipo | Descripción |
 |---|---|---|
@@ -105,9 +105,9 @@ Cada herramienta define `validate()` con advertencias que la IA explica y ayuda 
 
 ## 7. Implementación técnica
 
-- Endpoint `POST /api/ai/chat` (Route Handler, runtime Node) con **streaming** hacia la UI.
-- SDK: `@anthropic-ai/sdk` (TypeScript). **Al implementar, cargar el skill `claude-api`** de Claude Code para usar el modelo por defecto vigente, el modo de razonamiento recomendado, streaming, tool runner, prompt caching y manejo de `stop_reason` (incluido `refusal`) correctos. No escribir estos detalles de memoria.
-- Bucle de herramientas con el tool runner del SDK; validar con Zod la entrada de cada tool antes de ejecutarla.
+- Endpoint `POST /api/ai/chat` (Route Handler, runtime Node) con **streaming** hacia la UI (protocolo NDJSON propio: eventos `text`, `tool_call`, `done`, `error`).
+- SDK: `openai` (TypeScript), Responses API (`client.responses.create`). No hay skill de Claude Code para OpenAI: verificar modelo, parámetros y shapes vigentes contra `node_modules/openai` o la documentación oficial antes de modificar este código, no de memoria.
+- Bucle de herramientas manual (`src/app/api/ai/chat/route.ts`): se repite `responses.create` mientras la respuesta traiga items `function_call`, ejecutando cada tool y reenviando su `function_call_output`. Cada tool valida su entrada con Zod antes de ejecutarla (`src/ai/define-tool.ts`).
 - Persistir el historial completo de mensajes (incluyendo bloques de tool use) en `AiConversation.messages` y reenviarlo sin modificar.
 - Registrar tokens de entrada/salida por solicitud en `AiUsage`.
 - Límite de uso por organización configurable.

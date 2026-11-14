@@ -31,7 +31,7 @@ Si hay contradicción: `04_catalogo_herramientas.md` manda sobre campos/cálculo
 - **Tailwind CSS + shadcn/ui**
 - **React Flow** (lienzos: Ishikawa, VSM, Iceberg, mapas), **bpmn-js** (BPMN), **Recharts** (gráficos)
 - **Zod** para validación compartida cliente/servidor
-- **Anthropic TypeScript SDK** (`@anthropic-ai/sdk`) para el asistente IA. Al escribir código del asistente, **usa el skill `claude-api`** para obtener nombres de modelo, parámetros y patrones vigentes; no los escribas de memoria.
+- **OpenAI TypeScript SDK** (`openai`, Responses API) para el asistente IA. Modelo configurable vía `OPENAI_MODEL` (por defecto `gpt-6-astra`). No hay skill de Claude Code para la API de OpenAI: antes de tocar código del asistente, verifica los shapes vigentes contra los tipos instalados en `node_modules/openai` (o la documentación oficial en developers.openai.com) en vez de escribirlos de memoria — la API cambia seguido.
 - **Vitest** (unitarias) + **Playwright** (e2e)
 
 ## Convenciones

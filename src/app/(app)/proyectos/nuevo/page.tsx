@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { createProjectAction, type ActionState } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,14 @@ export default function NuevoProyectoPage() {
   const [state, formAction, pending] = useActionState(createProjectAction, initialState);
 
   return (
-    <div className="max-w-xl">
+    <div className="flex max-w-xl flex-col gap-3">
+      <p className="text-sm text-muted-foreground">
+        ¿No sabes qué tipo de proyecto es o qué herramientas usar?{" "}
+        <Link href="/proyectos/nuevo/asistente" className="text-primary underline underline-offset-4">
+          Crea el proyecto con el asistente
+        </Link>
+        .
+      </p>
       <Card>
         <CardHeader>
           <CardTitle>Nuevo proyecto</CardTitle>

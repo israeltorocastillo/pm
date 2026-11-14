@@ -10,6 +10,7 @@ import { ProjectStatusSelect } from "@/components/projects/project-status-select
 import { TaskStatusSelect } from "@/components/projects/task-status-select";
 import { AddTaskForm } from "@/components/projects/add-task-form";
 import { AddProjectMemberForm } from "@/components/projects/add-project-member-form";
+import { ChatPanel } from "@/components/ai/chat-panel";
 
 const dateFormatter = new Intl.DateTimeFormat("es-CL", { dateStyle: "medium" });
 
@@ -135,6 +136,10 @@ export default async function ProjectDetailPage({
           {isOwner && <AddProjectMemberForm projectId={project.id} candidates={candidates} />}
         </CardContent>
       </Card>
+
+      <div className="fixed bottom-4 right-4 z-10">
+        <ChatPanel projectId={project.id} />
+      </div>
     </div>
   );
 }

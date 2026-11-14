@@ -11,7 +11,7 @@
 | Diagramas | **React Flow** (Ishikawa, VSM, Iceberg, Rich Picture, árboles Hoshin), **bpmn-js** (BPMN) | Lienzos editables |
 | Gráficos | **Recharts** | Pareto, burndown, control charts, histogramas |
 | Validación | **Zod** | Schemas compartidos cliente/servidor y para las tools de la IA |
-| IA | **Anthropic TypeScript SDK** (`@anthropic-ai/sdk`) | Asistente con tool use y streaming |
+| IA | **OpenAI TypeScript SDK** (`openai`, Responses API) | Asistente con tool use (function calling) y streaming. Motor elegido por disponibilidad de API key corporativa (acceso a Anthropic requiere aprobación de TI, pendiente) |
 | Exportación | PDF vía `@react-pdf/renderer` o Playwright print; Excel vía `exceljs` | Entregables imprimibles |
 | Tests | **Vitest** + **Playwright** | Fórmulas y flujos críticos |
 | Despliegue | Docker; cualquier PaaS con Postgres (Vercel + Neon/Supabase, Azure App Service + Azure Database for PostgreSQL) | Flexible |
@@ -57,10 +57,11 @@
 │   │   │   └── index.ts
 │   │   └── ...
 │   ├── ai/
-│   │   ├── client.ts          # cliente Anthropic (solo servidor)
+│   │   ├── client.ts          # cliente OpenAI (solo servidor)
+│   │   ├── define-tool.ts     # helper para tools (Zod → JSON Schema, función plana)
 │   │   ├── system-prompt.ts
-│   │   ├── tools/             # tools que la IA puede invocar (ver docs/05)
-│   │   ├── knowledge.ts       # carga de fichas y del catálogo como contexto
+│   │   ├── context.ts         # contexto variable (proyecto/herramienta abiertos)
+│   │   ├── tools.ts           # tools que la IA puede invocar (ver docs/05)
 │   │   └── recommend.ts       # matriz síntoma → herramientas
 │   └── lib/
 └── tests/e2e/
@@ -251,18 +252,19 @@ model AiUsage { id String @id @default(cuid()) orgId String userId String inputT
 
 ## 6. Integración de IA (resumen; detalle en `05_asistente_ia.md`)
 
-- Endpoint `POST /api/ai/chat` (servidor) con **streaming**.
-- El cliente Anthropic se instancia solo en servidor con `ANTHROPIC_API_KEY` desde variables de entorno.
+- Endpoint `POST /api/ai/chat` (servidor) con **streaming** (Responses API, `stream: true`, protocolo NDJSON propio hacia el cliente).
+- El cliente OpenAI se instancia solo en servidor con `OPENAI_API_KEY` desde variables de entorno.
 - La IA dispone de **tools** propias de la plataforma (leer proyecto, listar herramientas, proponer creación/actualización). Las tools de escritura **no escriben directamente**: crean un `AiProposal` que el usuario acepta en la UI.
-- Contexto: system prompt estable (rol + metodología + catálogo resumido) con **prompt caching**; contexto variable (proyecto, herramienta abierta) al final.
-- Implementar usando el skill `claude-api` para modelo, parámetros y patrones vigentes.
+- Contexto: `instructions` estable (rol + metodología + catálogo resumido); OpenAI cachea automáticamente el prefijo repetido (sin marcado manual tipo `cache_control`). Contexto variable (proyecto, herramienta abierta) va en el mensaje del turno, no en `instructions`.
+- Bucle de tools manual (no hay "tool runner" de SDK para OpenAI): se repite `responses.create` mientras la respuesta traiga `function_call`, reenviando `function_call_output` por cada una.
 
 ## 7. Variables de entorno (`.env.example`)
 
 ```
 DATABASE_URL=postgresql://user:pass@localhost:5432/plataforma_pm
 AUTH_SECRET=
-ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-6-astra
 AZURE_AD_CLIENT_ID=        # P2
 AZURE_AD_CLIENT_SECRET=    # P2
 AZURE_AD_TENANT_ID=        # P2
